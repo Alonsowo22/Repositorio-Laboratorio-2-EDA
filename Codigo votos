@@ -1,11 +1,10 @@
-// Clase que representa un Voto
 public class Voto {
     private int id;
     private int votanteId;
     private int candidatoId;
     private String timeStamp;
 
-    // Constructor
+  
     public Voto(int id, int votanteId, int candidatoId, String timeStamp) {
         this.id = id;
         this.votanteId = votanteId;
@@ -13,7 +12,7 @@ public class Voto {
         this.timeStamp = timeStamp;
     }
 
-    // Getters y Setters
+
     public int getId() { return id; }
     public int getVotanteId() { return votanteId; }
     public int getCandidatoId() { return candidatoId; }
@@ -23,4 +22,142 @@ public class Voto {
     public void setVotanteId(int votanteId) { this.votanteId = votanteId; }
     public void setCandidatoId(int candidatoId) { this.candidatoId = candidatoId; }
     public void setTimeStamp(String timeStamp) { this.timeStamp = timeStamp; }
+}
+
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class Candidato {
+    private int id;
+    private String nombre;
+    private String partido;
+    private Queue<Voto> votosRecibidos;
+
+
+    public Candidato(int id, String nombre, String partido) {
+        this.id = id;
+        this.nombre = nombre;
+        this.partido = partido;
+        this.votosRecibidos = new LinkedList<>();
+    }
+
+   
+    public int getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getPartido() { return partido; }
+    public Queue<Voto> getVotosRecibidos() { return votosRecibidos; }
+
+    public void setId(int id) { this.id = id; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setPartido(String partido) { this.partido = partido; }
+
+
+    public void agregarVoto(Voto voto) {
+        votosRecibidos.add(voto);
+    }
+}
+
+
+public class Votante {
+    private int id;
+    private String nombre;
+    private boolean yaVoto;
+
+
+    public Votante(int id, String nombre) {
+        this.id = id;
+        this.nombre = nombre;
+        this.yaVoto = false;
+    }
+
+    
+    public int getId() { return id; }
+    public String getNombre() { return nombre; }
+    public boolean isYaVoto() { return yaVoto; }
+
+    public void setId(int id) { this.id = id; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    
+    public void marcarVotado() {
+        this.yaVoto = true;
+    }
+}
+
+
+import java.util.*;
+
+public class UrnaElectoral {
+    private LinkedList<Candidato> listaCandidatos;
+    private Stack<Voto> historialVotos;
+    private Queue<Voto> votosReportados;
+    private int idCounter;
+
+   
+    public UrnaElectoral() {
+        this.listaCandidatos = new LinkedList<>();
+        this.historialVotos = new Stack<>();
+        this.votosReportados = new LinkedList<>();
+        this.idCounter = 0;
+    }
+
+    
+    public boolean verificarVotante(Votante votante) {
+        return votante.isYaVoto();
+    }
+
+
+    public boolean registrarVoto(Votante votante, int candidatoId) {
+        if (verificarVotante(votante)) {
+            return false;
+        }
+
+        Voto nuevoVoto = new Voto(++idCounter, votante.getId(), candidatoId, new Date().toString());
+
+       
+        for (Candidato candidato : listaCandidatos) {
+            if (candidato.getId() == candidatoId) {
+                candidato.agregarVoto(nuevoVoto);
+                historialVotos.push(nuevoVoto);
+                votante.marcarVotado();
+                return true;
+            }
+        }
+
+        return false; 
+    }
+
+   
+    public boolean reportarVoto(Candidato candidato, int idVoto) {
+        Queue<Voto> nuevaCola = new LinkedList<>();
+        boolean encontrado = false;
+
+        while (!candidato.getVotosRecibidos().isEmpty()) {
+            Voto voto = candidato.getVotosRecibidos().poll();
+            if (voto.getId() == idVoto && !encontrado) {
+                votosReportados.add(voto);
+                encontrado = true;
+            } else {
+                nuevaCola.add(voto);
+            }
+        }
+
+        candidato.getVotosRecibidos().addAll(nuevaCola);
+        return encontrado;
+    }
+
+   
+    public String obtenerResultados() {
+        StringBuilder resultados = new StringBuilder();
+        for (Candidato candidato : listaCandidatos) {
+            resultados.append(candidato.getNombre())
+                      .append(" (Partido: ")
+                      .append(candidato.getPartido())
+                      .append(") - Votos: ")
+                      .append(candidato.getVotosRecibidos().size())
+                      .append("\n");
+        }
+        return resultados.toString();
+    }
 }
